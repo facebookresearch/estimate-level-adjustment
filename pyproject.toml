@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "estimate-level-adjustment"
+version = "0.1.0"
+description = "Estimate-Level Adjustment for proxy-based confidence intervals"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Meta Platforms, Inc."},
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+ml = [
+    "torch",
+    "transformers",
+    "scikit-learn",
+    "tqdm",
+]
+all = [
+    "estimate-level-adjustment[ml]",
+]
+
+[tool.setuptools.packages.find]
+include = ["estimate_level_adjustment*"]
