@@ -83,6 +83,63 @@ class KaggleDataset:
                 f"https://www.kaggle.com/competitions/{dataset_name}/data"
             )
 
+    def _parse_dataset_slug(self) -> str:
+        """
+        Extract the dataset slug (owner/dataset-name) from the Kaggle URL.
+
+        Returns:
+            Dataset slug, e.g. 'arabel1a/wilds-civilcomments'
+
+        Raises:
+            ValueError: If the URL doesn't contain a valid dataset path.
+        """
+        # e.g. https://www.kaggle.com/datasets/arabel1a/wilds-civilcomments
+        parts = self.kaggle_url.rstrip("/").split("/datasets/")
+        if len(parts) != 2 or "/" not in parts[1]:
+            raise ValueError(
+                f"Cannot parse dataset slug from URL: {self.kaggle_url}. "
+                "Expected format: https://www.kaggle.com/datasets/<owner>/<dataset>"
+            )
+        return parts[1]
+
+    def download_with_kaggle_api(self, force: bool = False) -> None:
+        """
+        Download and extract the dataset using the Kaggle API.
+
+        Requires:
+            1. ``pip install kaggle``
+            2. A Kaggle API token at ``~/.kaggle/kaggle.json``
+               (create at https://www.kaggle.com → Account → API → Create New Token)
+
+        Args:
+            force: If True, re-download even if files already exist.
+        """
+        csv_files = self.list_csv_files()
+        if csv_files and not force:
+            logger.info(
+                f"Dataset already extracted ({len(csv_files)} CSV files found). "
+                "Use force=True to re-download."
+            )
+            return
+
+        try:
+            from kaggle.api.kaggle_api_extended import KaggleApi
+        except ImportError:
+            raise ImportError(
+                "The 'kaggle' package is required for API downloads. "
+                "Install it with: pip install kaggle"
+            ) from None
+
+        slug = self._parse_dataset_slug()
+
+        api = KaggleApi()
+        api.authenticate()
+
+        logger.info(f"Downloading dataset '{slug}' to {self.data_dir}")
+        print(f"Downloading dataset '{slug}' to {self.data_dir} ...")
+        api.dataset_download_files(slug, path=str(self.data_dir), unzip=True)
+        print(f"Download complete. Files: {self.list_csv_files()}")
+
     def download_with_curl(self, cookies_file: str) -> None:
         """
         Download dataset using curl with Kaggle cookies.

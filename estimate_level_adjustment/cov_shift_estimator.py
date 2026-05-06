@@ -30,6 +30,8 @@ class CovShiftPPIEstimator:
         primary_outcome_column: str = "primary_outcome",
         proxy_outcome_column: str = "proxy_outcome",
         importance_weight_column: str = "importance_weight",
+        domain_column: str | None = None,
+        target_domain_value: object = None,
     ) -> None:
         """
         Initializes the CovShiftPPIEstimator with data from a DataFrame.
@@ -39,7 +41,12 @@ class CovShiftPPIEstimator:
             primary_outcome_column: Column name for primary/true outcome variable.
             proxy_outcome_column: Column name for proxy/predicted outcome variable.
             importance_weight_column: Column name for importance weights.
+            domain_column: Optional column name identifying the domain.
+            target_domain_value: If provided with domain_column, filter to this domain.
         """
+        if domain_column is not None and target_domain_value is not None:
+            df = df[df[domain_column] == target_domain_value]
+
         proxy_outcome = df[proxy_outcome_column].to_numpy()
         primary_outcome = df[primary_outcome_column].to_numpy()
         importance_weight = df[importance_weight_column].to_numpy()

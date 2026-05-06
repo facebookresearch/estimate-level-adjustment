@@ -220,7 +220,33 @@ class CovShiftDataGenerator:
 
         return importance_weights
 
-    def generate_data(self) -> pd.DataFrame:
+    def _compute_cross_domain_weights(
+        self, covariates: NDArray[np.float64], source_domain: int, target_domain: int
+    ) -> NDArray[np.float64]:
+        """
+        Compute importance weights for reweighting from source_domain to target_domain.
+
+        w_{s→d}(x) = p_d(x) / p_s(x) = exp(0.5|x - μ_s|² - 0.5|x - μ_d|²)
+
+        Args:
+            covariates: Covariate matrix of shape (n, n_covariates)
+            source_domain: Source domain index (0-indexed)
+            target_domain: Target domain index (0-indexed)
+
+        Returns:
+            Array of importance weights of shape (n,)
+        """
+        source_mean = self._domain_means[source_domain]
+        target_mean = self._domain_means[target_domain]
+
+        dist_sq_to_source = np.sum((covariates - source_mean) ** 2, axis=1)
+        dist_sq_to_target = np.sum((covariates - target_mean) ** 2, axis=1)
+
+        return np.exp(0.5 * dist_sq_to_source - 0.5 * dist_sq_to_target)
+
+    def generate_data(
+        self, include_cross_domain_weights: bool = False
+    ) -> pd.DataFrame:
         """
         Generate complete dataset for all domains.
 
@@ -229,6 +255,11 @@ class CovShiftDataGenerator:
         - Generate primary_outcome_i ~ Bernoulli(P(primary_outcome=1|X_i, S_i=s))
         - Compute proxy_outcome = f(X_i)
         - Compute importance weights w_s(X_i)
+
+        Args:
+            include_cross_domain_weights: If True, add columns weight_to_domain_1, ...,
+                weight_to_domain_K with normalized importance weights from each observation's
+                domain to every other domain.
 
         Returns:
             DataFrame with columns:
@@ -241,6 +272,7 @@ class CovShiftDataGenerator:
                 - proxy_sum_indicator: Sum of indicators for proxy_outcome (sum(I(x_p >= 0)))
                 - delta: Domain-specific delta value
                 - importance_weight: Importance weight for domain adaptation
+                - weight_to_domain_1, ..., weight_to_domain_K (if include_cross_domain_weights=True)
         """
         data_list = []
 
@@ -289,6 +321,12 @@ class CovShiftDataGenerator:
                 "delta": np.full(self._n_samples_per_domain, delta_value),
                 "importance_weight": importance_weights,
             }
+
+            if include_cross_domain_weights:
+                for d in range(self._n_domains):
+                    w = self._compute_cross_domain_weights(covariates, s, d)
+                    w = w / np.sum(w)
+                    domain_data[f"weight_to_domain_{d + 1}"] = w
 
             data_list.append(pd.DataFrame(domain_data))
 
