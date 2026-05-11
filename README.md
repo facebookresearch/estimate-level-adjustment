@@ -1,6 +1,6 @@
 # Estimate-Level Adjustment
 
-Code for the paper: **Estimate Level Adjustment For Inference With Proxies Under Random Distribution Shifts**
+Code for the paper: **Estimate Level Adjustment For Inference With Proxies Under Random Distribution Shifts** [link](https://arxiv.org/abs/2605.06484)
 
 <!-- TODO: Link to ArXiv paper when available -->
 
@@ -102,9 +102,10 @@ If you use this code, please cite our paper:
 <!-- TODO: Update with ArXiv link when available -->
 
 ```bibtex
-@article{estimate_level_adjustment,
+@article{wilkins2026estimate,
   title={Estimate Level Adjustment For Inference With Proxies Under Random Distribution Shifts},
-  author={Meta Platforms, Inc.},
+  author={Wilkins-Reeves, Steven and Darmon, Alexandra NM and Sinha, Deeksha},
+  journal={arXiv preprint arXiv:2605.06484},
   year={2026}
 }
 ```
